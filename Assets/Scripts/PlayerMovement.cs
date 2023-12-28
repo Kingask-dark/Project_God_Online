@@ -6,7 +6,8 @@ public class PlayerMovement : MonoBehaviour
 {
     // Start is called before the first frame update
     public CharacterController controller;
-    public float speed = 12f;
+    public Transform cam;
+    public float speed = 6f;
     public float gravity = -9.81f*2;
     public float jumpHeight = 3f;
     public Transform groundCheck;
@@ -14,10 +15,8 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask groundMask;
     Vector3 velocity;
     bool isGrounded;
-    void Start()
-    {
-        
-    }
+    public float turnSmoothTime = 0.1f;
+    float turnSmoothVelocity;
 
     // Update is called once per frame
     void Update()
@@ -34,9 +33,15 @@ public class PlayerMovement : MonoBehaviour
         float z = Input.GetAxis("Vertical");
  
         //right is the red Axis, foward is the blue axis
-        Vector3 move = transform.right * x + transform.forward * z;
- 
-        controller.Move(speed * Time.deltaTime * move);
+        // Vector3 move = transform.right * x + transform.forward * z;
+        Vector3 direction = new Vector3(x,0f,z).normalized;
+        if(direction.magnitude >= 0.1f){
+            
+        float targetAngle = Mathf.Atan2(direction.x,direction.z)*Mathf.Rad2Deg + cam.eulerAngles.y;
+        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y,targetAngle,ref turnSmoothVelocity,turnSmoothTime);
+        transform.rotation = Quaternion.Euler(0f,angle,0f);
+        Vector3 movDirection = Quaternion.Euler(0f,targetAngle,0f)* Vector3.forward;
+        controller.Move(speed * Time.deltaTime * movDirection.normalized);
  
         //check if the player is on the ground so he can jump
         if (Input.GetButtonDown("Jump") && isGrounded)
@@ -49,4 +54,5 @@ public class PlayerMovement : MonoBehaviour
  
         controller.Move(velocity * Time.deltaTime);
     }
+        }
 }
